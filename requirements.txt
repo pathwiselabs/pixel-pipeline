@@ -1,0 +1,14 @@
+torch>=2.0.0
+transformers>=4.35.0
+gradio>=4.0.0
+pillow>=9.5.0
+accelerate>=0.21.0
+sentencepiece>=0.1.99
+einops>=0.6.1
+protobuf>=3.20.0
+tiktoken>=0.4.0
+timm>=0.9.5
+bitsandbytes>=0.40.0
+qwen_vl_utils
+spaces
+accelerate
