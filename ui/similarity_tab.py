@@ -183,9 +183,43 @@ def create_similarity_tab(tabs):
                     columns=2,
                     height=600,
                     preview=True,
-                    elem_id="similarity_gallery"
+                    elem_id="similarity_gallery",
+                    allow_preview=True,
+                    show_download_button=True,
+                    object_fit="contain"  # Ensures images fit properly
                 )
-        
+
+            # Add custom CSS to ensure scrolling works
+            custom_css = """
+            #similarity_gallery {
+                overflow-y: auto !important;
+                max-height: 600px;
+            }
+            .gradio-gallery .thumbnail-item {
+                cursor: pointer;
+            }
+            .gradio-gallery .preview-image {
+                max-height: 80vh;
+                max-width: 100%;
+                object-fit: contain;
+            }
+            .gradio-gallery .preview-container {
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+            }
+            .gradio-gallery .navigation-buttons {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                position: absolute;
+                bottom: 10px;
+            }
+            """
+
+            # Add this after creating the gallery component:
+            gr.HTML(f"<style>{custom_css}</style>")
+    
         # Show/hide threshold slider based on method selection
         methods.change(
             fn=lambda m: gr.update(visible=("vgg16_similarity" in m)),

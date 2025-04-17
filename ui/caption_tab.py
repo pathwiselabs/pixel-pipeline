@@ -119,9 +119,42 @@ def create_caption_tab(tabs):
                     columns=3, 
                     height=600,
                     preview=True,
-                    elem_id="gallery"
+                    elem_id="caption_gallery",
+                    allow_preview=True,
+                    show_download_button=True,
+                    object_fit="contain"  # Ensures images fit properly
                 )
+
+                # Add custom CSS to ensure scrolling works
+                custom_css = """
+                #caption_gallery {
+                    overflow-y: auto !important;
+                    max-height: 600px;
+                }
+                .gradio-gallery .thumbnail-item {
+                    cursor: pointer;
+                }
+                .gradio-gallery .preview-image {
+                    max-height: 80vh;
+                    max-width: 100%;
+                    object-fit: contain;
+                }
+                .gradio-gallery .preview-container {
+                    overflow: hidden;
+                    display: flex;
+                    justify-content: center;
+                }
+                .gradio-gallery .navigation-buttons {
+                    display: flex;
+                    justify-content: space-between;
+                    width: 100%;
+                    position: absolute;
+                    bottom: 10px;
+                }
+                """
                 
+                gr.HTML(f"<style>{custom_css}</style>")
+
                 # Caption section under the gallery
                 selected_caption = gr.Textbox(
                     label="Selected Image Caption", 
