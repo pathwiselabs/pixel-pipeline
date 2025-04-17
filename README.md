@@ -50,9 +50,9 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Start the application:
+1. Start the application using the run file to activate the venv and launch app.py::
 ```bash
-python app.py
+run.bat
 ```
 
 2. Use the interface to:
@@ -66,7 +66,7 @@ python app.py
 ## Quick Start
 
 1. Upload your images using the "Upload Images" section
-2. Enter an identifier in the "Identifier or Name" field (e.g., "Laura Rose")
+2. Enter an identifier in the "Identifier or Name" field (e.g., "Joe Smith")
 3. Customize the captioning prompt if needed
 4. Click "Generate Captions" to process the images
 5. Preview the results in the gallery
@@ -76,7 +76,7 @@ python app.py
 
 The application uses Qwen2.5-VL, a vision-language model from Alibaba, to analyze images and generate descriptive captions. The captioning can be guided through custom prompts, allowing you to tailor the descriptions for specific use cases (e.g., describing people, scenes, objects).
 
-For compatibility with Flux image training formats, captions are prefixed with an identifier that can be either the full name provided or a hashed format consisting of initials and a short hash (e.g., "JD_1a2b3").
+For compatibility with Flux image training formats, captions are prefixed with an identifier that can be either the full identifier provided or a hashed format consisting of initials and a short hash (e.g., "Joe Smith" becomes "JS_1a2b3").
 
 ## Advanced Usage
 
@@ -102,7 +102,7 @@ The default prompt is designed for describing people in photographs, but you can
 
 ## License
 
-[Your License Here]
+MIT License
 
 ## Acknowledgments
 
