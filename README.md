@@ -1,4 +1,4 @@
-# Qwen-VL Batch Image Captioner
+# Image Tagger
 
 A Python application with Gradio UI for batch processing and captioning of images using Qwen2.5-VL vision-language models. The application generates captions that are compatible with Flux image training formats, allowing for easy integration with AI image training workflows.
 
