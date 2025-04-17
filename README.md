@@ -20,6 +20,7 @@ A Python application with Gradio UI for batch processing and captioning of image
 
 - **Python**: 3.11.9 or compatible
 - **CUDA**: 12.8 (Blackwell compatible)
+- **Torch**: Nightly builds of torch and torch vision (Blackwell compatible)
 - **RAM**: 8GB minimum, 16GB+ recommended
 - **GPU**: NVIDIA GPU with 6GB+ VRAM recommended for optimal performance
 - **Storage**: 10GB+ free space for models and temporary files
