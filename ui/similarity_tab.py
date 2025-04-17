@@ -1,4 +1,4 @@
-# ui\similarity.py
+# ui\similarity_tab.py
 
 import gradio as gr
 import os
@@ -13,115 +13,124 @@ def create_similarity_tab(tabs):
     """Create the image similarity detection tab UI and attach it to the tabs container"""
     
     hash_model = ImageHashModel()
-    vgg_model = None  # Initialize later on demand to save memory
+    vgg_model = VGG16SimilarityModel()  # Load VGG model directly
     
-    def init_vgg_model():
-        """Initialize the VGG16 model on demand"""
-        nonlocal vgg_model
-        if vgg_model is None:
-            vgg_model = VGG16SimilarityModel()
-        return "VGG16 model loaded successfully!"
-    
-    def process_directory(input_dir, method, similarity_threshold=0.85, progress=gr.Progress()):
-        """Process images in a directory to find similar/duplicate images"""
-        # Create temporary output directory
-        temp_output_dir = tempfile.mkdtemp()
-        
-        progress(0, desc="Starting image similarity analysis...")
-        
-        def progress_callback(current, total):
-            progress(current / total, desc=f"Processing image {current}/{total}")
-        
-        results = []
+    def process_directory(input_dir, output_dir, methods, similarity_threshold=0.85, progress=gr.Progress()):
+        """Process images in a directory to find similar/duplicate images and move them to separate folders"""
+        # Check if output directory exists, create if not
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
+        # Initialize results and stats
+        gallery_results = []
         stats = {}
+        moved_images = []
         
-        if method == "perceptual_hash":
-            # Process using image hash
-            duplicate_count = hash_model.process_images(
-                input_dir, temp_output_dir, progress_callback
-            )
-            
-            # Collect results
-            if duplicate_count > 0:
-                results = [[Image.open(os.path.join(temp_output_dir, f)), f] 
-                          for f in os.listdir(temp_output_dir) 
-                          if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                
-            stats = {
-                "duplicates_found": duplicate_count,
-                "total_images": len([f for f in os.listdir(input_dir) 
-                                   if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
-            }
-            
-            if duplicate_count == 0:
-                return [], f"No duplicate images found in {stats['total_images']} images."
-            else:
-                return (results, 
-                       f"Found {duplicate_count} duplicate images out of {stats['total_images']} total images.")
-            
-        elif method == "vgg16_similarity":
-            # Make sure VGG16 model is loaded
-            if vgg_model is None:
-                progress(0.1, desc="Loading VGG16 model...")
-                init_vgg_model()
-                
-            # Process using VGG16
-            similar_count = vgg_model.process_images(
-                input_dir, temp_output_dir, similarity_threshold, progress_callback
-            )
-            
-            # Collect similar pairs
-            pairs_dir = os.path.join(temp_output_dir, "similar_pairs")
-            if os.path.exists(pairs_dir) and similar_count > 0:
-                results = [[Image.open(os.path.join(pairs_dir, f)), f] 
-                          for f in os.listdir(pairs_dir) 
-                          if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                
-            stats = {
-                "similar_pairs": similar_count,
-                "total_images": len([f for f in os.listdir(input_dir) 
-                                   if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
-            }
-            
-            if similar_count == 0:
-                return [], f"No similar images found in {stats['total_images']} images (threshold: {similarity_threshold})."
-            else:
-                return (results, 
-                       f"Found {similar_count} similar image pairs out of {stats['total_images']} total images (threshold: {similarity_threshold}).")
-    
-    def create_zip_file(input_dir, method, similarity_threshold=0.85, progress=gr.Progress()):
-        """Create a ZIP file of similar/duplicate images"""
         progress(0, desc="Starting image similarity analysis...")
         
-        # Create temporary output directory
-        temp_output_dir = tempfile.mkdtemp()
+        # Get total image count
+        total_images = len([f for f in os.listdir(input_dir) 
+                         if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
         
-        def progress_callback(current, total):
-            progress(current / total, desc=f"Processing image {current}/{total}")
+        # Create progress callback
+        def progress_callback(current, total, method_name=""):
+            progress(current / total, desc=f"Processing image {current}/{total} with {method_name}")
         
-        # Process the images
-        if method == "perceptual_hash":
-            hash_model.process_images(input_dir, temp_output_dir, progress_callback)
-        elif method == "vgg16_similarity":
-            if vgg_model is None:
-                progress(0.1, desc="Loading VGG16 model...")
-                init_vgg_model()
-            vgg_model.process_images(input_dir, temp_output_dir, similarity_threshold, progress_callback)
-        
-        # Create ZIP file
-        progress(0.9, desc="Creating ZIP file...")
-        zip_path = os.path.join(tempfile.gettempdir(), f"similarity_results_{method}.zip")
-        
-        # Add similar_pairs directory to ZIP if it exists
-        if method == "vgg16_similarity" and os.path.exists(os.path.join(temp_output_dir, "similar_pairs")):
-            shutil.make_archive(zip_path[:-4], 'zip', os.path.join(temp_output_dir, "similar_pairs"))
-        else:
-            shutil.make_archive(zip_path[:-4], 'zip', temp_output_dir)
-        
-        progress(1.0, desc="ZIP file created!")
-        
-        return zip_path, "Similarity analysis results ZIP file created and ready for download!"
+        # Process with perceptual hash if selected
+        if "perceptual_hash" in methods:
+            hash_output_dir = os.path.join(output_dir, "duplicate_images")
             
+            progress(0.1, desc="Running perceptual hash analysis...")
+            
+            # Process images with hash model - it will move duplicates to output dir
+            duplicate_count = hash_model.process_images(
+                input_dir, 
+                hash_output_dir, 
+                lambda current, total: progress_callback(current, total, "perceptual hash")
+            )
+            
+            # Collect results for gallery if duplicates were found
+            if duplicate_count > 0 and os.path.exists(hash_output_dir):
+                for filename in os.listdir(hash_output_dir):
+                    if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        filepath = os.path.join(hash_output_dir, filename)
+                        thumb = Image.open(filepath)
+                        thumb = thumb.copy()  # Create a copy to avoid resource issues
+                        gallery_results.append([thumb, f"Duplicate: {filename}"])
+                        moved_images.append(filename)
+            
+            stats["perceptual_hash"] = {
+                "duplicates_found": duplicate_count,
+                "total_images": total_images
+            }
+            
+        # Process with VGG16 if selected
+        if "vgg16_similarity" in methods:
+            vgg_output_dir = os.path.join(output_dir, "similar_images")
+            
+            progress(0.5, desc="Running VGG16 similarity analysis...")
+            
+            # Process images with VGG16 model - it will move only one image from each similar pair to output dir
+            similar_count = vgg_model.process_images(
+                input_dir, 
+                vgg_output_dir, 
+                similarity_threshold, 
+                lambda current, total: progress_callback(current, total, "VGG16 similarity")
+            )
+            
+            # Collect similar pairs for gallery
+            pairs_dir = os.path.join(vgg_output_dir, "similar_pairs")
+            if similar_count > 0 and os.path.exists(pairs_dir):
+                for filename in os.listdir(pairs_dir):
+                    if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        filepath = os.path.join(pairs_dir, filename)
+                        thumb = Image.open(filepath)
+                        thumb = thumb.copy()  # Create a copy to avoid resource issues
+                        gallery_results.append([thumb, f"Similar pair: {filename}"])
+            
+            # Add moved similar images to the list
+            if os.path.exists(vgg_output_dir):
+                for filename in os.listdir(vgg_output_dir):
+                    if filename.lower().endswith(('.png', '.jpg', '.jpeg')) and filename not in moved_images:
+                        moved_images.append(filename)
+            
+            stats["vgg16_similarity"] = {
+                "similar_pairs": similar_count,
+                "total_images": total_images
+            }
+        
+        # Generate status message based on results
+        status_msg = []
+        
+        if "perceptual_hash" in methods:
+            hash_stats = stats.get("perceptual_hash", {})
+            dup_count = hash_stats.get("duplicates_found", 0)
+            if dup_count > 0:
+                status_msg.append(f"Found and moved {dup_count} duplicate images to {os.path.join(output_dir, 'duplicate_images')}")
+            else:
+                status_msg.append("No duplicate images found with perceptual hash")
+                
+        if "vgg16_similarity" in methods:
+            vgg_stats = stats.get("vgg16_similarity", {})
+            sim_count = vgg_stats.get("similar_pairs", 0)
+            if sim_count > 0:
+                status_msg.append(f"Found {sim_count} similar image pairs with VGG16 (threshold: {similarity_threshold})")
+                status_msg.append(f"One image from each pair moved to {os.path.join(output_dir, 'similar_images')}")
+                status_msg.append(f"Comparison images created in {os.path.join(output_dir, 'similar_images', 'similar_pairs')}")
+            else:
+                status_msg.append(f"No similar images found with VGG16 (threshold: {similarity_threshold})")
+        
+        status_message = "\n".join(status_msg)
+        
+        # Final cleanup
+        progress(1.0, desc="Completed image processing")
+        
+        # If we have no results to display in gallery
+        if not gallery_results:
+            return [], status_message
+            
+        return gallery_results, status_message
+    
     with gr.TabItem("Image Similarity"):
         gr.Markdown("## 🔍 Image Similarity & Duplicate Detection")
         
@@ -134,14 +143,20 @@ def create_similarity_tab(tabs):
                     info="Directory containing images to analyze"
                 )
                 
-                method = gr.Radio(
-                    choices=["perceptual_hash", "vgg16_similarity"],
-                    value="perceptual_hash",
-                    label="Detection Method",
-                    info="Perceptual hash is faster but only finds near-duplicates. VGG16 can find visually similar images."
+                output_dir = gr.Textbox(
+                    label="Output Directory Path",
+                    placeholder="Enter the full path to your output directory",
+                    info="Directory where duplicate/similar images will be moved to"
                 )
                 
-                with gr.Row(visible=lambda: method == "vgg16_similarity"):
+                methods = gr.CheckboxGroup(
+                    choices=["perceptual_hash", "vgg16_similarity"],
+                    value=["perceptual_hash"],
+                    label="Detection Methods",
+                    info="Select one or both methods. Perceptual hash is faster but only finds near-duplicates. VGG16 can find visually similar images."
+                )
+                
+                with gr.Row(visible=lambda methods: "vgg16_similarity" in methods):
                     similarity_threshold = gr.Slider(
                         minimum=0.5,
                         maximum=0.99,
@@ -152,70 +167,36 @@ def create_similarity_tab(tabs):
                     )
                 
                 with gr.Row():
-                    btn_analyze = gr.Button("Analyze Images", variant="primary")
-                    btn_download = gr.Button("Download Results as ZIP")
+                    btn_process = gr.Button("Process Directory", variant="primary")
                 
-                with gr.Row():
-                    load_vgg_btn = gr.Button("Load VGG16 Model", visible=lambda: method == "vgg16_similarity")
-                
-                result_file = gr.File(label="Results ZIP File")
-                status = gr.Textbox(label="Status", value="Ready to analyze images...", interactive=False)
-                
-                vgg_status = gr.Textbox(
-                    label="VGG16 Model Status",
-                    value="Not loaded (will load automatically when needed)",
-                    visible=lambda: method == "vgg16_similarity",
-                    interactive=False
+                status = gr.Textbox(
+                    label="Status", 
+                    value="Ready to analyze images...", 
+                    interactive=False,
+                    lines=5
                 )
                 
             # Results gallery column
             with gr.Column(scale=2):
                 gallery = gr.Gallery(
-                    label="🖼️ Similar/Duplicate Images", 
+                    label="🖼️ Detected Duplicate/Similar Images", 
                     columns=2,
                     height=600,
                     preview=True,
                     elem_id="similarity_gallery"
                 )
         
-        # Set up event handlers
-        load_vgg_btn.click(
-            fn=init_vgg_model,
-            inputs=None,
-            outputs=vgg_status
-        )
-        
         # Show/hide threshold slider based on method selection
-        method.change(
-            fn=lambda x: gr.update(visible=(x == "vgg16_similarity")),
-            inputs=method,
+        methods.change(
+            fn=lambda m: gr.update(visible=("vgg16_similarity" in m)),
+            inputs=methods,
             outputs=similarity_threshold
         )
         
-        method.change(
-            fn=lambda x: gr.update(visible=(x == "vgg16_similarity")),
-            inputs=method,
-            outputs=load_vgg_btn
-        )
-        
-        method.change(
-            fn=lambda x: gr.update(visible=(x == "vgg16_similarity")),
-            inputs=method,
-            outputs=vgg_status
-        )
-        
-        # Analyze button
-        btn_analyze.click(
+        # Process button
+        btn_process.click(
             fn=process_directory,
-            inputs=[input_dir, method, similarity_threshold],
+            inputs=[input_dir, output_dir, methods, similarity_threshold],
             outputs=[gallery, status],
-            show_progress="full"
-        )
-        
-        # Download button
-        btn_download.click(
-            fn=create_zip_file,
-            inputs=[input_dir, method, similarity_threshold],
-            outputs=[result_file, status],
             show_progress="full"
         )

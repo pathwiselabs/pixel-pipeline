@@ -12,3 +12,6 @@ bitsandbytes>=0.40.0
 qwen_vl_utils
 spaces
 accelerate
+imagehash
+tensorflow
+scipy
