@@ -182,27 +182,29 @@ class ImageProcessor:
         identifier = f"{initials}_{hashcode}"
         return identifier
     
-    def generate_cache_key(self, files, prompt, model_key):
+    def generate_cache_key(self, files, prompt, identifier, use_hash, model_key):
         """
         Generate a unique key for the caption cache.
         
         Args:
             files (list): List of file objects to process.
             prompt (str): The prompt text used for processing.
+            identifier (str): Base identifier for the captions.
+            use_hash (bool): Whether to include a hash in the identifier.
             model_key (str): The model key used for processing.
             
         Returns:
-            str: Unique MD5 hash to identify this processing request for training.
+            str: Unique MD5 hash to identify this processing request.
         """
         # Create a string of all filenames and last modified times
         files_info = "|".join([
             f"{file.name}:{file_utils.get_file_modification_time(file.name)}" 
             for file in files
         ])
-        # Combine with prompt and model to create unique key
-        return hashlib.md5(f"{files_info}|{prompt}|{model_key}".encode()).hexdigest()
+        # Combine with all parameters to create unique key
+        return hashlib.md5(f"{files_info}|{prompt}|{identifier}|{use_hash}|{model_key}".encode()).hexdigest()
     
-    def process_images(self, files, prompt, identifier, use_hash, model_key, progress=None, status_callback=None, force_refresh=False):
+    def process_images(self, files, prompt, identifier, use_hash, model_key, progress=None, status_callback=None, force_refresh=False, use_cache=True):
         """
         Process multiple images with a given prompt.
         
@@ -215,15 +217,16 @@ class ImageProcessor:
             progress (function, optional): Callback for progress updates.
             status_callback (function, optional): Callback for status messages.
             force_refresh (bool): Whether to bypass cache and reprocess images.
+            use_cache (bool): Whether to use the cache for this operation.
             
         Returns:
             dict: Processed data including gallery, captions, and identifiers.
         """
         # Generate a cache key
-        cache_key = self.generate_cache_key(files, prompt, model_key)
-    
-        # Check if we have cached results (only if not forcing refresh)
-        if not force_refresh and cache_key in self.caption_cache:
+        cache_key = self.generate_cache_key(files, prompt, identifier, use_hash, model_key)
+
+        # Check if we have cached results (only if not forcing refresh and use_cache is True)
+        if use_cache and not force_refresh and cache_key in self.caption_cache:
             if progress is not None:
                 progress(1.0, desc="Using cached results!")
             if status_callback:
