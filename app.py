@@ -1,11 +1,30 @@
 # app.py
 
+# Supress deprecation noise
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'      # Silence TensorFlow INFO/WARN logs
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'     # Kill the oneDNN custom-ops message
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
+# Suppress any stdout from UMAP’s __init__.py
+import contextlib, sys
+with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+    import umap  # Supress boolean umap message
+
 import gradio as gr
 from ui.caption_tab import create_caption_tab
 from ui.help_tab import create_help_tab
 from ui.similarity_tab import create_similarity_tab
 from ui.face_detection_tab import create_face_detection_tab
 from ui.clustering_tab import create_clustering_tab
+import base64
+
 
 # Global CSS to fix gallery issues
 gallery_css = """
@@ -48,10 +67,22 @@ gallery_css = """
     margin: 0 10px;
 }
 """
+# Create resources
+def get_base64_logo():
+    with open("resources/logo.png", "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 # Create the main application
 def create_app():
     with gr.Blocks(theme=gr.themes.Soft(), css=gallery_css) as demo:
+
+        with gr.Row(elem_id="header"):
+            gr.HTML("""
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+                    <img src="data:image/png;base64,{get_base64_logo()}" height="80px" />
+                </div>
+            """)
+
         gr.Markdown("## 🖼️ Pixel Pipeline - An Image Dataset Refinement Pipeline")
         
         with gr.Tabs() as tabs:
@@ -109,4 +140,4 @@ if __name__ == "__main__":
     
     # Launch the app
     app = create_app()
-    app.launch()
+    app.launch(favicon_path=r"resources\favicon-32x32.png", inbrowser=True)
