@@ -173,8 +173,16 @@ def create_clustering_tab(tabs):
         
         return gallery_results, status_message
     
-    with gr.TabItem("Face Clustering"):
-        gr.Markdown("## 👥 Face Clustering & Dataset Reduction")
+    with gr.TabItem("3. Image Set Refinement"):
+         
+        gr.Markdown("""
+                    ## 👥 Image Set Refinement"
+
+                    **Purpose:** Group similar faces and automaticlaly select representative images to optimize dataset size.
+
+                    **When to use:** Use this step when you need to reduce dataset size while maintaining diversity.
+                    """)
+
         
         with gr.Row():
             # Input controls column

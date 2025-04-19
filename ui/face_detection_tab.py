@@ -78,8 +78,13 @@ def create_face_detection_tab(tabs):
             
         return gallery_results, status_message
     
-    with gr.TabItem("Face Detection"):
-        gr.Markdown("## 👤 Face Detection & Sorting")
+    with gr.TabItem("2. Face Detection"):
+        gr.Markdown("""
+                    ## 👤 Face Detection & Sorting
+                    **Purpose:** Filter images based on face count and quality for focused training sets.
+
+                    **When to use:** To refine a dataset to focus on a specific character .
+                    """)
         
         with gr.Row():
             # Input controls column

@@ -53,7 +53,16 @@ def clear_cache():
 
 def create_caption_tab(tabs):
     """Create the caption tab UI and attach it to the tabs container"""
-    with gr.TabItem("Image Captioning"):
+    with gr.TabItem("4. Image Captioning"):
+
+        gr.Markdown("""
+                    ## 🏷️ Image Captioning
+
+                    **Purpose:** Generate high-quality AI descriptions for your refined images.
+
+                    **When to use:** This final step prepares your cleaned dataset for training with detailed natural language captions.
+                    """)
+
         captions_store = gr.State([])  # Store for captions to be used for selection
         
         with gr.Row():
