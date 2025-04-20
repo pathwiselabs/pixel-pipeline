@@ -131,7 +131,7 @@ def create_similarity_tab(tabs):
             
         return gallery_results, status_message
     
-    with gr.TabItem("Image Similarity"):
+    with gr.TabItem("1. Image Similarity"):
         gr.Markdown("""
                     ## 🔍 Image Similarity & Duplicate Detection
                     **Purpose:** Remove duplicates and/or visually similar images to improve dataset quality.

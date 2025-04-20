@@ -11,12 +11,34 @@ from facenet_pytorch import InceptionResnetV1
 from torch.utils.data import DataLoader
 from sklearn.cluster import KMeans
 from PIL import Image
+import tkinter as tk
+from tkinter import filedialog
 
 def create_clustering_tab(tabs):
     """Create the face clustering tab UI and attach it to the tabs container"""
     
+    def select_directory(button_name):
+        """Open a directory selection dialog and return the selected path"""
+        # Create a hidden Tkinter root window to avoid it showing in taskbar
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)  # Ensure dialog appears on top
+        
+        # Choose appropriate title based on which button was clicked
+        title = "Select Input Directory" if button_name == "input" else "Select Output Directory"
+        folder_path = filedialog.askdirectory(title=title)
+        root.destroy()
+        
+        # Return the selected path or None if canceled
+        if folder_path:
+            return folder_path
+        return None
+    
     def cluster_images(input_dir, output_dir, n_clusters, batch_size, clustering_method, progress=gr.Progress()):
         """Process images in a directory to cluster faces and select representative images"""
+        if not input_dir or not output_dir:
+            return [], "Please select both input and output directories."
+            
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -176,9 +198,9 @@ def create_clustering_tab(tabs):
     with gr.TabItem("3. Image Set Refinement"):
          
         gr.Markdown("""
-                    ## 👥 Image Set Refinement"
+                    ## 👥 Image Set Refinement
 
-                    **Purpose:** Group similar faces and automaticlaly select representative images to optimize dataset size.
+                    **Purpose:** Group similar faces and automatically select representative images to optimize dataset size.
 
                     **When to use:** Use this step when you need to reduce dataset size while maintaining diversity.
                     """)
@@ -187,17 +209,36 @@ def create_clustering_tab(tabs):
         with gr.Row():
             # Input controls column
             with gr.Column(scale=1):
+                # Input directory with browse button in a single container
                 input_dir = gr.Textbox(
                     label="Input Directory Path",
-                    placeholder="Enter the full path to your image directory",
-                    info="Directory containing processed face images to cluster"
+                    placeholder="Select input directory →",
+                    info="Directory containing processed face images to cluster",
+                    container=False
                 )
                 
+                # Create a container to hold both the textbox and button horizontally
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        # The textbox was created above
+                        pass
+                    with gr.Column(scale=1):
+                        input_btn = gr.Button("📂 Browse", size="sm")
+                
+                # Same approach for output directory
                 output_dir = gr.Textbox(
                     label="Output Directory Path",
-                    placeholder="Enter the full path to your output directory",
-                    info="Directory where selected representative images will be saved"
+                    placeholder="Select output directory →",
+                    info="Directory where selected representative images will be saved",
+                    container=False
                 )
+                
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        # The textbox was created above
+                        pass
+                    with gr.Column(scale=1):
+                        output_btn = gr.Button("📂 Browse", size="sm")
                 
                 n_clusters = gr.Slider(
                     minimum=5,
@@ -294,6 +335,29 @@ def create_clustering_tab(tabs):
                 }
                 """
                 gr.HTML(f"<style>{custom_css}</style>")
+        
+        # Connect directory selection buttons - use a clean function that won't trigger progress
+        def handle_select_input():
+            path = select_directory("input")
+            return path if path else gr.update()
+            
+        def handle_select_output():
+            path = select_directory("output")
+            return path if path else gr.update()
+            
+        input_btn.click(
+            fn=handle_select_input,
+            inputs=None,
+            outputs=input_dir,
+            api_name=False  # This prevents capturing in API and history
+        )
+        
+        output_btn.click(
+            fn=handle_select_output,
+            inputs=None,
+            outputs=output_dir,
+            api_name=False  # This prevents capturing in API and history
+        )
         
         # Process button
         btn_process.click(
