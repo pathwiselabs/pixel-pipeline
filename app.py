@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 import logging
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
-# Suppress any stdout from UMAP’s __init__.py
+# Suppress any stdout from UMAP's __init__.py
 import contextlib, sys
 with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
     import umap  # Supress boolean umap message
@@ -26,7 +26,7 @@ from ui.clustering_tab import create_clustering_tab
 import base64
 
 
-# Global CSS to fix gallery issues
+# Global CSS to fix gallery issues and improve header layout
 gallery_css = """
 .gradio-gallery {
     overflow-y: auto !important;
@@ -66,24 +66,68 @@ gallery_css = """
     justify-content: center;
     margin: 0 10px;
 }
+/* Custom header styling */
+#app-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 20px;
+}
+#logo-container {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#logo-container img {
+    max-width: 100%;
+    max-height: 100%;
+}
+#header-text {
+    margin-left: 20px;
+}
+#header-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
+}
+#header-subtitle {
+    font-size: 18px;
+    color: #666;
+    margin: 5px 0 0 0;
+}
 """
+
 # Create resources
 def get_base64_logo():
-    with open("resources/logo.png", "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
+    try:
+        with open("resources/logo.png", "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    except FileNotFoundError:
+        print("Logo file not found at resources/logo.png")
+        return ""
 
 # Create the main application
 def create_app():
     with gr.Blocks(theme=gr.themes.Soft(), css=gallery_css) as demo:
+        # Get the logo before creating the HTML
+        logo_base64 = get_base64_logo()
 
-        with gr.Row(elem_id="header"):
-            gr.HTML("""
-                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
-                    <img src="data:image/png;base64,{get_base64_logo()}" height="80px" />
+        # Custom header with logo on left and title/subtitle to right
+        gr.HTML(f"""
+            <div id="app-header">
+                <div id="logo-container">
+                    <img src="data:image/png;base64,{logo_base64}" alt="Pixel Pipeline Logo" />
                 </div>
-            """)
-
-        gr.Markdown("## 🖼️ Pixel Pipeline - An Image Dataset Refinement Pipeline")
+                <div id="header-text">
+                    <h1 id="header-title">Pixel Pipeline</h1>
+                    <p id="header-subtitle">Automated Image Set Cleaning</p>
+                </div>
+            </div>
+        """)
         
         with gr.Tabs() as tabs:
             # Complete workflow in suggested order
@@ -138,6 +182,10 @@ if __name__ == "__main__":
         print(f"pip install {' '.join(missing_deps)}")
         exit(1)
     
-    # Launch the app
+    # Launch the app with custom port to avoid conflicts with other Gradio apps
     app = create_app()
-    app.launch(favicon_path=r"resources\favicon-32x32.png", inbrowser=True)
+    app.launch(
+        favicon_path=r"resources\favicon-32x32.png", 
+        inbrowser=True,
+        server_port=7865  # Use specific port to avoid conflicts with other Gradio apps
+    )

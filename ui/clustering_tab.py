@@ -239,23 +239,23 @@ def create_clustering_tab(tabs):
         with gr.Row():
             # Input controls column
             with gr.Column(scale=1):
-                # Fix the UI layout for input directory
-                with gr.Row():
-                    input_dir = gr.Textbox(
-                        label="Input Directory Path",
-                        placeholder="Select input directory →",
-                        info="Directory containing processed face images to cluster"
-                    )
-                    input_btn = gr.Button("📂", size="sm")
+                # Separate textbox and button into different components
+                input_dir = gr.Textbox(
+                    label="Input Directory Path",
+                    placeholder="Select input directory using button below",
+                    info="Directory containing processed face images to cluster"
+                )
+                # Button now appears below the textbox
+                input_btn = gr.Button("📂 Browse Input Directory", size="sm")
                 
-                # Fix the UI layout for output directory
-                with gr.Row():
-                    output_dir = gr.Textbox(
-                        label="Output Directory Path",
-                        placeholder="Select output directory →",
-                        info="Directory where selected representative images will be saved"
-                    )
-                    output_btn = gr.Button("📂", size="sm")
+                # Same pattern for output directory
+                output_dir = gr.Textbox(
+                    label="Output Directory Path",
+                    placeholder="Select output directory using button below",
+                    info="Directory where selected representative images will be saved"
+                )
+                # Button appears below the textbox
+                output_btn = gr.Button("📂 Browse Output Directory", size="sm")
                 
                 n_clusters = gr.Slider(
                     minimum=5,
