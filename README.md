@@ -1,14 +1,4 @@
-<table>
-<tr> 
-  <td width="180px", border= "0px">
-    <img src="resources/logo.png" alt="Pixel Pipeline Logo" width="160"/>
-  </td>
-  <td>
-    <h1>Pixel Pipeline</h1>
-    <p>Automated Image Set Cleaning</p>
-  </td>
-</tr>
-</table>
+<img src="resources/readme_header.png" alt="Pixel Pipeline Logo" width="500"/>
 
 ## What is it?
 
