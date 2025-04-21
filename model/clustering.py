@@ -188,14 +188,3 @@ def cluster_and_select_images(input_dir, output_dir, n_clusters=50, batch_size=3
         shutil.copy2(img_path, output_dir)
 
     return selected_images, cluster_labels, embeddings
-
-# Example usage
-if __name__ == "__main__":
-    input_directory = r"G:\AI\visionforge\main\data\lauraliechap\images"
-    output_directory = r"G:\AI\visionforge\main\data\lauraliechap\images\clusters"
-    selected_images, cluster_labels, embeddings = cluster_and_select_images(
-        input_directory,
-        output_directory,
-        n_clusters=20,
-        batch_size=32
-    )
