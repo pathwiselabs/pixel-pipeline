@@ -10,7 +10,7 @@
 </tr>
 </table>
 
-## Automated Image Set Cleaning
+## What is it?
 
 Pixel Pipeline is a desktop application that helps you refine image datasets for AI training by cleaning, filtering, and enhancing your image collections. It offers a comprehensive set of tools for removing duplicates, filtering images by face count, reducing dataset size while maintaining diversity, and generating high-quality AI captions.
 
