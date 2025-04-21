@@ -10,6 +10,9 @@ def create_face_detection_tab(tabs):
     
     face_model = FaceDetectionModel()
     
+    # Create a filtered list of detector backends without retinaface
+    compatible_backends = [backend for backend in face_model.detector_backends if backend != "retinaface"]
+    
     def process_directory(input_dir, output_dir, detector_backend, align, progress=gr.Progress()):
         """Process images in a directory to detect and categorize faces"""
         if not os.path.exists(output_dir):
@@ -80,11 +83,37 @@ def create_face_detection_tab(tabs):
     
     with gr.TabItem("2. Face Detection"):
         gr.Markdown("""
-                    ## 👤 Face Detection & Sorting
-                    **Purpose:** Filter images based on face count and quality for focused training sets.
+        ## 👤 Face Detection & Sorting
+        **Purpose:** Filter images based on face count and quality for focused training sets.
 
-                    **When to use:** To refine a dataset to focus on a specific character .
-                    """)
+        **When to use:** To refine a dataset to focus on a specific character.
+        """)
+        
+        # Add collapsible accordion for detailed information
+        with gr.Accordion("ℹ️ How Face Detection Works", open=False):
+            gr.Markdown("""
+            ### How Face Detection Works
+            
+            This tool analyzes each image and categorizes it based on the number of faces detected:
+            
+            1. **No faces** - Images with no detected faces are moved to a separate folder
+            2. **Multiple faces** - Images with more than one face are moved to a different folder
+            3. **Single faces** - Images with exactly one face remain in the original input directory
+            
+            **Detector Options:**
+            - **MTCNN**: Good balance of accuracy and speed (recommended)
+            - **MediaPipe**: Fastest option, good for large datasets
+            - **YuNet**: Fast and lightweight detector with good accuracy
+            - **DLib**: A classic detection method, reliable but slower
+            - Other options have specific strengths for different use cases
+            
+            **Note:** RetinaFace is currently not compatible with Blackwell GPUs
+            
+            **Important Note:**
+            Face detection is resource-intensive. For best results:
+            - Use after duplicate/similarity removal
+            - Process smaller batches if you have limited VRAM
+            """)
         
         with gr.Row():
             # Input controls column
@@ -102,10 +131,10 @@ def create_face_detection_tab(tabs):
                 )
                 
                 detector_backend = gr.Dropdown(
-                    choices=face_model.detector_backends,
-                    value="retinaface",
+                    choices=compatible_backends,
+                    value="mtcnn",  # Changed default from retinaface to mtcnn
                     label="Face Detector Backend",
-                    info="Select which face detection algorithm to use. RetinaFace offers good accuracy-performance balance."
+                    info="Select which face detection algorithm to use. MTCNN is recommended for Blackwell GPUs."
                 )
                 
                 align = gr.Checkbox(
@@ -114,37 +143,14 @@ def create_face_detection_tab(tabs):
                     info="Enable face alignment during detection (recommended)"
                 )
                 
-                with gr.Row():
-                    btn_process = gr.Button("Process Directory", variant="primary")
-                
-                status = gr.Textbox(
-                    label="Status", 
-                    value="Ready to detect faces...", 
-                    interactive=False,
-                    lines=5
-                )
-                
-                gr.Markdown("""
-                ### Important Note
-                
-                Face detection is resource-intensive. For best results:
-                
-                1. Use after duplicate/similarity removal
-                2. Choose RetinaFace for accuracy, MTCNN for speed
-                3. Processing large datasets may take time
-                
-                Images will be organized into:
-                - No faces - Images with no detected faces
-                - Multiple faces - Images with more than one face
-                - Input directory - Only single-face images remain
-                """)
+                btn_process = gr.Button("Process Directory", variant="primary")
                 
             # Results gallery column
             with gr.Column(scale=2):
                 gallery = gr.Gallery(
                     label="🖼️ Categorized Face Images", 
                     columns=2,
-                    height=600,
+                    height=550,
                     preview=True,
                     elem_id="face_gallery",
                     allow_preview=True,
@@ -152,11 +158,19 @@ def create_face_detection_tab(tabs):
                     object_fit="contain"
                 )
                 
+                # Status message under the gallery
+                status = gr.Textbox(
+                    label="Status", 
+                    value="Ready to detect faces...", 
+                    interactive=False,
+                    lines=5
+                )
+                
                 # Add custom CSS for gallery scrolling
                 custom_css = """
                 #face_gallery {
                     overflow-y: auto !important;
-                    max-height: 600px;
+                    max-height: 550px;
                 }
                 .gradio-gallery .thumbnail-item {
                     cursor: pointer;

@@ -138,6 +138,34 @@ def create_similarity_tab(tabs):
 
                     **When to use:** As a first step in the dataset refinement process.
                     """)
+        
+        with gr.Accordion("ℹ️ How Similarity Detection Works", open=False):
+            gr.Markdown("""
+            ### How Similarity Detection Works
+            
+            This tool offers two complementary methods for finding and removing redundant images:
+            
+            **Perceptual Hash:**
+            - Generates a unique "fingerprint" for each image based on its visual content
+            - Fast and efficient for identifying exact or near-duplicate images
+            - Great for finding resized, compressed, or slightly modified versions of the same image
+            
+            **VGG16 Similarity:**
+            - Uses deep learning to identify images that are visually similar but not identical
+            - Can find different photos of the same scene, subject, or composition
+            - More resource-intensive but provides more sophisticated analysis
+            - The similarity threshold controls how closely matched images need to be (higher = more similar)
+            
+            **Output Organization:**
+            - Duplicate images are moved to a "duplicate_images" folder
+            - One image from each similar pair is moved to a "similar_images" folder
+            - Comparison images showing similar pairs are created for your reference
+            
+            **Recommended Workflow:**
+            1. First run with perceptual hash to remove exact duplicates
+            2. Then run with VGG16 similarity to identify and remove visually similar images
+            3. Start with a higher threshold (0.85-0.90) and adjust as needed
+            """)
 
         
         with gr.Row():

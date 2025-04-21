@@ -62,6 +62,31 @@ def create_caption_tab(tabs):
 
                     **When to use:** This final step prepares your cleaned dataset for training with detailed natural language captions.
                     """)
+        
+        with gr.Accordion("ℹ️ How Image Captioning Works", open=False):
+            gr.Markdown("""
+            ### How Image Captioning Works
+            
+            This tool uses Qwen2.5-VL vision-language models to analyze your images and generate descriptive captions:
+            
+            1. The model processes each image and interprets its visual content
+            2. Based on your custom prompt, it generates natural language descriptions
+            3. Captions are prefixed with your identifier (full name or hashed format)
+            4. Results can be downloaded as a ZIP file containing individual text files for each image
+            
+            **Model Options:**
+            - **Qwen2.5-VL-3B-Instruct**: Faster processing, smaller memory footprint (~8GB)
+            - **Qwen2.5-VL-7B-Instruct**: More detailed and accurate captions, requires more VRAM (16GB+)
+            
+            **Prompt Tips:**
+            - Be specific about what aspects you want described (e.g., "describe clothing, expression, pose")
+            - Shorter prompts often yield more concise and focused descriptions
+            - The default prompt is optimized for character descriptions but can be customized
+            
+            **Hash ID Option:**
+            - When enabled, converts "John Smith" to something like "JS_ab123"
+            - Recommended for better compatibility with training formats
+            """)
 
         captions_store = gr.State([])  # Store for captions to be used for selection
         

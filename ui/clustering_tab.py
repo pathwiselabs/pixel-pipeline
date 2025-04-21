@@ -218,7 +218,7 @@ def create_clustering_tab(tabs):
         """)
         
         # Create an accordion for the "How it Works" section 
-        with gr.Accordion("ℹ️ How It Works", open=False):
+        with gr.Accordion("ℹ️ How Image Set Refinement Works", open=False):
             gr.Markdown("""
             This tool:
             1. Detects faces in images
@@ -232,8 +232,7 @@ def create_clustering_tab(tabs):
             
             **Note**: This process requires significant computational resources. For best results:
             - Run on a dataset that's already been filtered for duplicates and face quality
-            - Ensure all images contain the same person/character
-            - A good LoRA training size is typically 20-50 images for characters
+            - Ensure all images contain the target character or style
             """)
         
         # Main content area
