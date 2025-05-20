@@ -1,0 +1,40 @@
+# Core PyTorch dependencies - install these FIRST
+# For RTX 5000 series GPUs (using CUDA 12.8)
+--pre
+torch==2.8.0.dev20250408+cu128
+torchvision
+torchaudio
+--index-url https://download.pytorch.org/whl/nightly/cu128
+
+# Base dependencies
+gradio>=4.0.0
+pillow>=9.5.0
+einops>=0.6.1
+protobuf>=3.20.0
+accelerate>=0.21.0
+transformers>=4.35.0
+sentencepiece>=0.1.99
+tiktoken>=0.4.0
+timm>=0.9.5
+bitsandbytes>=0.40.0
+qwen_vl_utils
+spaces
+accelerate
+
+# Image processing dependencies
+imagehash
+scipy
+psutil
+
+# Face detection dependencies
+deepface
+tf-keras
+ultralytics
+mediapipe
+
+# Face clustering dependencies - install WITHOUT dependencies
+# pip install --no-deps facenet-pytorch
+umap-learn
+scikit-learn>=1.0.0
+matplotlib>=3.5.0
+tqdm>=4.62.0
